@@ -1,0 +1,37 @@
+/* src/input.css */
+@import "tailwindcss";
+
+@theme {
+  /* Переносим наши кастомные цвета */
+  --color-dark: #20232a;
+  --color-item: #2c313c;
+  --color-neon: #61dafb;
+  --color-danger: #ff4757;
+  --color-hoverNeon: #4fa8c7;
+
+  /* Кастомные анимации */
+  --animate-flash: flash 1s infinite;
+  
+  @keyframes flash {
+    0%, 100% { background-color: rgba(0, 0, 0, 0.9); }
+    50% { background-color: rgba(50, 0, 0, 0.9); }
+  }
+}
+
+/* Наши кастомные утилиты для теней и скролла */
+@layer utilities {
+  .neon-text {
+    text-shadow: 0 0 10px #61dafb, 0 0 20px #61dafb, 0 0 40px #218c74;
+  }
+  .neon-text-red {
+    text-shadow: 0 0 10px #ff4757, 0 0 30px #ff4757, 0 0 60px #ff0000;
+  }
+  
+  .custom-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background-color: #2c313c; 
+    border-radius: 4px;
+  }
+}

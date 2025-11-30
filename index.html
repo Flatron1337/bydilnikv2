@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <!-- Политика безопасности (важно для Electron): разрешаем скрипты и стили только из текущей папки -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+    <title>Мульти-Будильник</title>
+    
+    <!-- Подключаем наш скомпилированный CSS -->
+    <link rel="stylesheet" href="output.css">
+</head>
+<body class="bg-dark text-white h-screen w-screen flex flex-col items-center justify-center overflow-hidden select-none font-sans antialiased">
+    
+    <!-- Кнопка выхода (Крестик справа сверху) -->
+    <button id="exitBtn" class="absolute top-6 right-6 w-12 h-12 rounded-full border-2 border-danger text-danger flex items-center justify-center text-xl hover:bg-danger hover:text-white transition-all duration-300 z-20 outline-none cursor-pointer">
+        ✕
+    </button>
+
+    <!-- Главные часы -->
+    <h1 id="clock" class="text-8xl font-bold mb-10 transition-all duration-300 neon-text tracking-wider cursor-default">
+        00:00:00
+    </h1>
+    
+    <!-- Панель управления (Ввод времени и кнопка) -->
+    <div class="flex gap-4 mb-8">
+        <!-- input type="time" стилизуем через color-scheme-dark, чтобы иконка часов была белой -->
+        <input type="time" id="alarmTimeInput" class="bg-item border-2 border-neon text-white rounded-xl p-3 text-2xl outline-none focus:shadow-[0_0_15px_#61dafb] transition-shadow duration-300 color-scheme-dark cursor-pointer">
+        
+        <button id="addBtn" class="bg-neon text-dark font-bold text-xl py-3 px-8 rounded-xl hover:bg-hoverNeon hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer shadow-[0_0_10px_rgba(97,218,251,0.3)]">
+            Добавить
+        </button>
+    </div>
+    
+    <!-- Контейнер списка будильников -->
+    <div class="w-96 max-h-80 bg-white/5 backdrop-blur-sm rounded-2xl p-6 custom-scroll overflow-y-auto border border-white/10 shadow-xl">
+        <h3 class="text-gray-400 mb-4 text-xs uppercase tracking-widest text-center font-semibold opacity-70">
+            Активные будильники
+        </h3>
+        
+        <!-- Сюда JavaScript будет добавлять элементы <li> -->
+        <ul id="alarmsList" class="space-y-3">
+            <!-- Пример (будет удален JS-ом): -->
+            <!-- <li class="text-center text-gray-500">Список пуст</li> -->
+        </ul>
+    </div>
+
+    <!-- ЭКРАН ТРЕВОГИ (Оверлей) -->
+    <!-- Изначально скрыт классом hidden -->
+    <div id="alarmOverlay" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center animate-flash bg-black/95 backdrop-blur-md">
+        <div class="text-center transform scale-100 p-10">
+            <h1 class="text-9xl text-danger font-black mb-6 drop-shadow-[0_0_50px_red]">
+                ПОДЪЕМ!
+            </h1>
+            <p id="alarmTextTime" class="text-7xl text-white font-mono mb-16 opacity-90">
+                00:00
+            </p>
+            <button id="stopBtn" class="bg-danger text-white text-4xl font-bold py-6 px-16 rounded-full hover:scale-110 active:scale-95 transition-all duration-200 shadow-[0_0_50px_rgba(255,71,87,0.5)] cursor-pointer">
+                Я проснулся
+            </button>
+        </div>
+    </div>
+
+    <!-- Скрипт логики приложения -->
+    <script src="renderer.js"></script>
+</body>
+</html>

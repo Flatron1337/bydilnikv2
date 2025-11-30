@@ -1,0 +1,34 @@
+# 1. Зависимости (самая тяжелая папка)
+node_modules/
+
+# 2. Результаты сборки (папки, где появляются exe и AppImage)
+dist/
+out/
+build/
+release/
+
+# 3. Сгенерированные стили (Tailwind)
+# Хорошая практика - не хранить output.css, так как он создается командой build
+# Но если хотите видеть стили сразу после клонирования - удалите эту строку
+output.css
+
+# 4. Логи ошибок npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 5. Системные файлы (Windows)
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# 6. Системные файлы (macOS - на всякий случай)
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 7. Настройки редакторов (VS Code, WebStorm)
+.idea/
+.vscode/
+*.swp

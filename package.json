@@ -1,0 +1,42 @@
+{
+  "name": "bydilnikv2",
+  "version": "1.0.0",
+  "description": "Мой будильник",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "dist": "electron-builder",
+    "build:css": "tailwindcss -i ./src/input.css -o ./output.css --watch",
+    "build:css:prod": "tailwindcss -i ./src/input.css -o ./output.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "build": {
+    "appId": "com.bydilnikv2.app",
+    "productName": "BydilnikV2",
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png",
+      "category": "Utility"
+    },
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.17",
+    "electron": "^39.2.4",
+    "electron-builder": "^26.3.2",
+    "tailwindcss": "^4.1.17"
+  }
+}

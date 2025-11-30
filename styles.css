@@ -1,0 +1,128 @@
+/* styles.css */
+
+/* ... (предыдущие стили body и #clock оставляем) ... */
+
+body {
+    /* Убедитесь, что у body стоит это */
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #20232a;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden; /* Скрываем полосы прокрутки самого окна */
+}
+
+/* Кнопка выхода в углу */
+.close-app-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: 2px solid #ff4757;
+    color: #ff4757;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    padding: 0;
+    line-height: 0;
+}
+.close-app-btn:hover {
+    background: #ff4757;
+    color: white;
+}
+
+/* Контейнер управления */
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Список будильников */
+.alarms-container {
+    width: 300px;
+    max-height: 300px; /* Ограничиваем высоту */
+    overflow-y: auto; /* Прокрутка если много будильников */
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    background: #2c313c;
+    margin: 10px 0;
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.5rem;
+    border-left: 4px solid #61dafb;
+}
+
+/* Кнопка удаления (мусорка) */
+.delete-btn {
+    background: transparent;
+    color: #ff6b6b;
+    border: none;
+    padding: 5px 10px;
+    font-size: 1.2rem;
+    margin-left: 10px;
+}
+.delete-btn:hover {
+    background: rgba(255, 107, 107, 0.1);
+    transform: scale(1.1);
+}
+
+/* --- ОВЕРЛЕЙ (ЭКРАН ТРЕВОГИ) --- */
+.hidden { display: none !important; }
+
+#alarmOverlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); /* Темный фон */
+    z-index: 999; /* Поверх всего */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: flashBackground 1s infinite; /* Мигание фона */
+}
+
+.alarm-box h1 {
+    font-size: 5rem;
+    color: #ff4757;
+    margin: 0;
+    text-shadow: 0 0 50px red;
+}
+
+.alarm-box p {
+    font-size: 3rem;
+    color: white;
+}
+
+#stopBtn {
+    background-color: #ff4757;
+    font-size: 2rem;
+    padding: 20px 60px;
+    margin-top: 50px;
+    color: white;
+}
+
+@keyframes flashBackground {
+    0% { background-color: rgba(0, 0, 0, 0.9); }
+    50% { background-color: rgba(50, 0, 0, 0.9); }
+    100% { background-color: rgba(0, 0, 0, 0.9); }
+}
