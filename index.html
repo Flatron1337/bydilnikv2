@@ -2,65 +2,111 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <!-- Политика безопасности (важно для Electron): разрешаем скрипты и стили только из текущей папки -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
-    <title>Мульти-Будильник</title>
-    
-    <!-- Подключаем наш скомпилированный CSS -->
+    <!-- Разрешаем загрузку локальных файлов (аудио, картинки) и скриптов -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src 'self' file: data: blob:;">
+    <title>Super Alarm</title>
     <link rel="stylesheet" href="output.css">
 </head>
-<body class="bg-dark text-white h-screen w-screen flex flex-col items-center justify-center overflow-hidden select-none font-sans antialiased">
+<body class="bg-dark text-text-main h-screen w-screen flex flex-col items-center overflow-hidden select-none font-sans transition-colors duration-500">
     
-    <!-- Кнопка выхода (Крестик справа сверху) -->
-    <button id="exitBtn" class="absolute top-6 right-6 w-12 h-12 rounded-full border-2 border-danger text-danger flex items-center justify-center text-xl hover:bg-danger hover:text-white transition-all duration-300 z-20 outline-none cursor-pointer">
-        ✕
-    </button>
-
-    <!-- Главные часы -->
-    <h1 id="clock" class="text-8xl font-bold mb-10 transition-all duration-300 neon-text tracking-wider cursor-default">
-        00:00:00
-    </h1>
-    
-    <!-- Панель управления (Ввод времени и кнопка) -->
-    <div class="flex gap-4 mb-8">
-        <!-- input type="time" стилизуем через color-scheme-dark, чтобы иконка часов была белой -->
-        <input type="time" id="alarmTimeInput" class="bg-item border-2 border-neon text-white rounded-xl p-3 text-2xl outline-none focus:shadow-[0_0_15px_#61dafb] transition-shadow duration-300 color-scheme-dark cursor-pointer">
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+    <div class="absolute top-0 w-full p-6 flex justify-between items-center z-20">
+        <!-- Темы -->
+        <div class="flex gap-3 bg-item/50 p-2 rounded-full backdrop-blur-sm shadow-lg">
+            <button onclick="setTheme('default')" class="w-6 h-6 rounded-full bg-[#20232a] border border-gray-500 hover:scale-110 transition" title="Киберпанк"></button>
+            <button onclick="setTheme('light')" class="w-6 h-6 rounded-full bg-[#f0f2f5] border border-gray-400 hover:scale-110 transition" title="Светлая"></button>
+            <button onclick="setTheme('mono')" class="w-6 h-6 rounded-full bg-black border border-white hover:scale-110 transition" title="Моно"></button>
+        </div>
         
-        <button id="addBtn" class="bg-neon text-dark font-bold text-xl py-3 px-8 rounded-xl hover:bg-hoverNeon hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer shadow-[0_0_10px_rgba(97,218,251,0.3)]">
-            Добавить
+        <!-- Кнопка Выход (по-настоящему) -->
+        <button id="exitAppBtn" class="text-danger border border-danger/30 rounded-full w-10 h-10 flex items-center justify-center font-bold hover:bg-danger hover:text-white transition-all cursor-pointer" title="Закрыть полностью">✕</button>
+    </div>
+
+    <!-- ЦЕНТРАЛЬНАЯ ЧАСТЬ -->
+    <div class="flex flex-col items-center justify-center flex-grow w-full max-w-2xl px-4">
+        
+        <!-- Аналоговые часы -->
+        <div class="relative w-64 h-64 mb-8 hidden md:block group">
+            <div class="clock-face transition-shadow duration-500 group-hover:shadow-[0_0_40px_var(--primary-color)]"></div>
+            <div class="hand hand-hour" id="handHour"></div>
+            <div class="hand hand-min" id="handMin"></div>
+            <div class="hand hand-sec" id="handSec"></div>
+            <div class="absolute top-1/2 left-1/2 w-4 h-4 bg-neon rounded-full -translate-x-1/2 -translate-y-1/2 z-20 shadow-[0_0_10px_var(--primary-color)]"></div>
+        </div>
+
+        <!-- Цифровые часы -->
+        <h1 id="clock" class="text-8xl font-bold mb-2 neon-text tracking-widest tabular-nums">00:00:00</h1>
+        
+        <!-- Инфо о сне -->
+        <p id="sleepProgress" class="text-sm opacity-60 mb-10 font-mono tracking-wide h-6">...</p>
+
+        <!-- Кнопка Создать -->
+        <button id="openModalBtn" class="bg-neon text-dark font-bold text-lg py-4 px-12 rounded-full hover:brightness-110 hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_var(--primary-color)] cursor-pointer mb-8">
+            + Новый будильник
         </button>
-    </div>
-    
-    <!-- Контейнер списка будильников -->
-    <div class="w-96 max-h-80 bg-white/5 backdrop-blur-sm rounded-2xl p-6 custom-scroll overflow-y-auto border border-white/10 shadow-xl">
-        <h3 class="text-gray-400 mb-4 text-xs uppercase tracking-widest text-center font-semibold opacity-70">
-            Активные будильники
-        </h3>
-        
-        <!-- Сюда JavaScript будет добавлять элементы <li> -->
-        <ul id="alarmsList" class="space-y-3">
-            <!-- Пример (будет удален JS-ом): -->
-            <!-- <li class="text-center text-gray-500">Список пуст</li> -->
-        </ul>
-    </div>
 
-    <!-- ЭКРАН ТРЕВОГИ (Оверлей) -->
-    <!-- Изначально скрыт классом hidden -->
-    <div id="alarmOverlay" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center animate-flash bg-black/95 backdrop-blur-md">
-        <div class="text-center transform scale-100 p-10">
-            <h1 class="text-9xl text-danger font-black mb-6 drop-shadow-[0_0_50px_red]">
-                ПОДЪЕМ!
-            </h1>
-            <p id="alarmTextTime" class="text-7xl text-white font-mono mb-16 opacity-90">
-                00:00
-            </p>
-            <button id="stopBtn" class="bg-danger text-white text-4xl font-bold py-6 px-16 rounded-full hover:scale-110 active:scale-95 transition-all duration-200 shadow-[0_0_50px_rgba(255,71,87,0.5)] cursor-pointer">
-                Я проснулся
+        <!-- СПИСОК БУДИЛЬНИКОВ -->
+        <div class="w-full bg-item/40 backdrop-blur-md rounded-2xl p-4 custom-scroll overflow-y-auto h-64 border border-white/5 shadow-inner">
+            <ul id="alarmsList" class="space-y-3"></ul>
+        </div>
+        
+        <!-- НАСТРОЙКИ (ПОДВАЛ) -->
+        <div class="mt-6 flex flex-col items-center gap-2 text-sm opacity-70 w-full">
+            <div class="flex items-center gap-4 bg-item/50 px-4 py-2 rounded-lg">
+                <span>🎵 Мелодия:</span>
+                <input type="file" id="soundInput" accept="audio/*" class="text-xs w-48 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:bg-neon file:text-dark file:cursor-pointer cursor-pointer">
+                <button onclick="testSound()" class="hover:text-neon transition">▶ Тест</button>
+            </div>
+            <button onclick="openLogs()" class="text-xs underline hover:text-neon mt-2 cursor-pointer">
+                📂 Открыть логи (если что-то не работает)
             </button>
         </div>
     </div>
 
-    <!-- Скрипт логики приложения -->
+    <!-- МОДАЛЬНОЕ ОКНО (СОЗДАНИЕ) -->
+    <div id="createModal" class="hidden fixed inset-0 z-40 bg-black/80 flex items-center justify-center backdrop-blur-sm transition-opacity">
+        <div class="bg-item p-8 rounded-2xl w-96 border border-neon/30 shadow-[0_0_50px_rgba(0,0,0,0.5)] transform scale-100 transition-transform">
+            <h2 class="text-2xl font-bold mb-6 text-neon text-center uppercase tracking-widest">Настройка</h2>
+            
+            <label class="block text-xs mb-1 opacity-70 uppercase font-bold">Время</label>
+            <input type="time" id="modalTime" class="w-full bg-dark border border-neon/50 rounded-lg p-3 text-3xl mb-4 text-white color-scheme-dark outline-none focus:border-neon transition-colors text-center font-mono">
+            
+            <label class="block text-xs mb-1 opacity-70 uppercase font-bold">Название</label>
+            <input type="text" id="modalLabel" placeholder="Например: Полить цветы" class="w-full bg-dark border border-white/10 rounded-lg p-3 mb-6 text-white outline-none focus:border-neon transition-colors">
+            
+            <label class="block text-xs mb-3 opacity-70 uppercase font-bold text-center">Дни повтора</label>
+            <div class="flex justify-between mb-8 px-2">
+                <label class="cursor-pointer flex flex-col items-center group"><input type="checkbox" class="day-check accent-neon w-5 h-5" value="1"> <span class="text-xs mt-1 group-hover:text-neon">Пн</span></label>
+                <label class="cursor-pointer flex flex-col items-center group"><input type="checkbox" class="day-check accent-neon w-5 h-5" value="2"> <span class="text-xs mt-1 group-hover:text-neon">Вт</span></label>
+                <label class="cursor-pointer flex flex-col items-center group"><input type="checkbox" class="day-check accent-neon w-5 h-5" value="3"> <span class="text-xs mt-1 group-hover:text-neon">Ср</span></label>
+                <label class="cursor-pointer flex flex-col items-center group"><input type="checkbox" class="day-check accent-neon w-5 h-5" value="4"> <span class="text-xs mt-1 group-hover:text-neon">Чт</span></label>
+                <label class="cursor-pointer flex flex-col items-center group"><input type="checkbox" class="day-check accent-neon w-5 h-5" value="5"> <span class="text-xs mt-1 group-hover:text-neon">Пт</span></label>
+                <label class="cursor-pointer flex flex-col items-center group"><input type="checkbox" class="day-check accent-neon w-5 h-5 text-danger" value="6"> <span class="text-xs mt-1 text-danger group-hover:text-red-400">Сб</span></label>
+                <label class="cursor-pointer flex flex-col items-center group"><input type="checkbox" class="day-check accent-neon w-5 h-5 text-danger" value="0"> <span class="text-xs mt-1 text-danger group-hover:text-red-400">Вс</span></label>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="saveAlarmBtn" class="flex-1 bg-neon text-dark font-bold py-3 rounded-lg hover:brightness-110 active:scale-95 transition-all">Сохранить</button>
+                <button id="cancelModalBtn" class="flex-1 bg-transparent border border-white/20 text-white font-bold py-3 rounded-lg hover:bg-white/10 active:scale-95 transition-all">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ОВЕРЛЕЙ ТРЕВОГИ -->
+    <div id="alarmOverlay" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center animate-flash bg-black">
+        <h1 id="overlayLabel" class="text-5xl text-white mb-6 font-light opacity-90 tracking-wide text-center px-4">...</h1>
+        <p id="alarmTextTime" class="text-9xl text-danger font-black mb-16 drop-shadow-[0_0_60px_red] font-mono">00:00</p>
+        
+        <div class="flex flex-col gap-6 w-72">
+            <button id="stopBtn" class="bg-danger text-white text-2xl font-bold py-5 rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_40px_red]">
+                Я проснулся ☀
+            </button>
+            <button id="snoozeBtn" class="bg-white/10 backdrop-blur-md border border-white/20 text-white text-lg py-4 rounded-full hover:bg-white/20 transition-all">
+                Еще 5 минут... 😴
+            </button>
+        </div>
+    </div>
+
     <script src="renderer.js"></script>
 </body>
 </html>

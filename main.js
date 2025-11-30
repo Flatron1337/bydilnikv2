@@ -1,64 +1,73 @@
-// main.js
-const { app, BrowserWindow, Tray, Menu } = require('electron')
-const path = require('path')
+const { app, BrowserWindow, Tray, Menu, powerSaveBlocker, shell } = require('electron');
+const path = require('path');
+const log = require('electron-log');
+
+// --- НАСТРОЙКА ЛОГОВ ---
+log.transports.file.level = 'info';
+Object.assign(console, log.functions); // Перенаправляем console.log в файл
+
+console.log('------------------------------------------------');
+console.log(`[Main] Запуск приложения. Версия: ${app.getVersion()}`);
+console.log(`[Main] Платформа: ${process.platform}`);
 
 let win;
 let tray = null;
+let powerBlockerId = null;
 
-function createWindow () {
+// Блокируем засыпание системы, чтобы будильник не проспал
+powerBlockerId = powerSaveBlocker.start('prevent-app-suspension');
+console.log(`[Main] Блокировка сна активна (ID: ${powerBlockerId})`);
+
+// Защита от повторного запуска (Single Instance)
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+}
+
+function createWindow() {
   win = new BrowserWindow({
-    // Убираем width/height, так как будет полный экран
-    fullscreen: true, // <--- Включаем полный экран
-    icon: path.join(__dirname, 'icon.png'),
+    width: 1000,
+    height: 700,
+    minWidth: 800,
+    minHeight: 600,
+    icon: path.join(__dirname, process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: true, // Нужно для fs и renderer.js
       contextIsolation: false
-    }
-  })
+    },
+    // frame: false, // Раскомментируйте, если хотите полностью свой дизайн окна без рамки
+  });
 
-  win.loadFile('index.html')
-  win.setMenuBarVisibility(false) // Скрываем верхнее меню
+  win.loadFile('index.html');
+  win.setMenuBarVisibility(false);
 
-  // --- ЛОГИКА СВОРАЧИВАНИЯ ---
-  
-  // Перехватываем событие закрытия
+  // Обработка закрытия (сворачивание в трей)
   win.on('close', (event) => {
-    // Если приложение не находится в процессе "полного выхода"
     if (!app.isQuiting) {
-      event.preventDefault(); // Отменяем закрытие
-      win.hide(); // Просто прячем окно
+      event.preventDefault();
+      win.hide();
+      console.log('[Main] Окно свернуто в трей');
     }
-    // Если app.isQuiting === true, окно закроется как обычно
   });
 }
 
-// Создаем иконку в трее
 function createTray() {
-  // Убедитесь, что файл icon.png лежит рядом с main.js!
-  const iconPath = path.join(__dirname, 'icon.png');
-  tray = new Tray(iconPath);
-
+  const iconName = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
+  tray = new Tray(path.join(__dirname, iconName));
+  
   const contextMenu = Menu.buildFromTemplate([
-    { 
-      label: 'Показать будильник', 
-      click: () => { win.show(); } 
-    },
-    { 
-      label: 'Выход', 
-      click: () => {
-        app.isQuiting = true; // Ставим флаг, что теперь можно закрывать насовсем
-        app.quit(); // Выходим
+    { label: 'Открыть', click: () => win.show() },
+    { type: 'separator' },
+    { label: 'Выход', click: () => {
+        app.isQuiting = true;
+        app.quit();
       } 
     }
   ]);
-
-  tray.setToolTip('Мой Будильник'); // Текст при наведении
+  
+  tray.setToolTip('Super Alarm');
   tray.setContextMenu(contextMenu);
-
-  // При двойном клике на иконку - открываем окно
-  tray.on('double-click', () => {
-    win.show();
-  });
+  tray.on('double-click', () => win.show());
 }
 
 app.whenReady().then(() => {
@@ -66,16 +75,14 @@ app.whenReady().then(() => {
   createTray();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-// Отключаем стандартное поведение "закрыть все окна = выход"
-// так как у нас приложение должно жить в фоне
-/* 
-   В Electron по умолчанию app.quit вызывается когда все окна закрыты.
-   Так как мы перехватили 'close', это событие нам не мешает,
-   но для порядка можно оставить этот код пустым или не писать его вовсе для Windows.
-*/
+// Если запущена вторая копия - фокусируемся на первой
+app.on('second-instance', () => {
+  if (win) {
+    if (win.isMinimized()) win.restore();
+    win.focus();
+  }
+});
